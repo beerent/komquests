@@ -1,6 +1,5 @@
 package com.komquests.api.strava.models.segment_leaderboard;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SegmentLeaderboard {
