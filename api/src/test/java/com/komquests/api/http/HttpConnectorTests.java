@@ -45,6 +45,19 @@ public class HttpConnectorTests {
         assertEquals(expectedResponse, response);
     }
 
+    @Test
+    public void testHttpConnectorCanReturnTrimmedDataFromInvalidHttpRequest() {
+        RestService restService = Mockito.mock(RestService.class);
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(null);
+
+        HttpConnector httpConnector = new HttpConnector(restService);
+        String trimStart = "fixed-bottom bg-light text-dark";
+        String trimEnd = "/www.linkedin.com/in/nab";
+        String response = httpConnector.get("https://www.google.com", trimStart, trimEnd);
+
+        assertNull(response);
+    }
+
     public String getValidResponse() {
         return "<html>\n" +
                 "  <head>\n" +

@@ -17,9 +17,17 @@ public class HttpConnector {
 
     public String get(String targetUrl, String trimStart, String trimEnd) {
         String response = get(targetUrl);
+        if (!responseIsValid(response)) {
+            return response;
+        }
+
         int trimIndexStart = response.indexOf(trimStart) + trimStart.length();
-        int trimIndexEnd = response.indexOf(trimEnd);
+        int trimIndexEnd = response.substring(trimIndexStart).indexOf(trimEnd) + trimIndexStart;
 
         return response.substring(trimIndexStart, trimIndexEnd);
+    }
+
+    private boolean responseIsValid(String response) {
+        return response != null;
     }
 }
