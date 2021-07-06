@@ -4,16 +4,35 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class RestService {
     private String token;
+    private AuthenticationType authenticationType;
 
-    public RestService(String token) {
+    public RestService() {
+        this.token = null;
+        this.authenticationType = AuthenticationType.INVALID;
+    }
+
+    public RestService(String token, AuthenticationType authenticationType) {
         this.token = token;
+        this.authenticationType = authenticationType;
     }
 
     public String get(String targetUrl) {
+        return get(targetUrl, new HashMap<>());
+    }
+
+    public String get(String targetUrl, Map<String, String> queryParams) {
+        if (isQueryAuthentication()) {
+            addAuthenticationToQuery(queryParams);
+        }
+
+        targetUrl = new QueryBuilder().addQueryParamsToUrl(targetUrl, queryParams);
+
         HttpURLConnection conn = buildHttpUrlConnection(targetUrl, "GET");
         if (!isValidHttpUrlConnection(conn)) {
             return null;
@@ -28,20 +47,38 @@ public class RestService {
         return response;
     }
 
-    private HttpURLConnection buildHttpUrlConnection(String targetUrl, String request) {
+    private HttpURLConnection buildHttpUrlConnection(String targetUrl, String requestMethod) {
         HttpURLConnection conn = null;
 
         try {
             URL url = new URL(targetUrl);
             conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(request);
-            String authString = "Bearer " + token;
-            conn.setRequestProperty("Authorization", authString);
+            conn.setRequestMethod(requestMethod);
+            if (isBearerAuthentication()) {
+                setConnectionBearerAuthentication(conn);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         return conn;
+    }
+
+    private boolean isBearerAuthentication() {
+        return this.authenticationType == AuthenticationType.BEARER;
+    }
+
+    private boolean isQueryAuthentication() {
+        return this.authenticationType == AuthenticationType.QUERY;
+    }
+
+    private void setConnectionBearerAuthentication(HttpURLConnection conn) {
+        String authString = "Bearer " + token;
+        conn.setRequestProperty("Authorization", authString);
+    }
+
+    private void addAuthenticationToQuery(Map<String, String> queryParams) {
+        queryParams.put("key", this.token);
     }
 
     private String getResponseFromRequest(InputStreamReader inputStreamReader) {

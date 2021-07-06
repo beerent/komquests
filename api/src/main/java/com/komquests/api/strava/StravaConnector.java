@@ -3,8 +3,8 @@ package com.komquests.api.strava;
 import com.google.gson.Gson;
 import com.komquests.api.http.HttpConnector;
 import com.komquests.api.rest.RestService;
-import com.komquests.api.strava.models.segment.Segment;
-import com.komquests.api.strava.models.segment_leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.Segment;
+import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboard;
 
 public class StravaConnector {
     private static final String SEGMENT_ENDPOINT = "https://www.strava.com/api/v3/segments";
@@ -39,7 +39,11 @@ public class StravaConnector {
             return null;
         }
 
-        return null; //buildSegmentLeaderboard(response);
+        return new SegmentLeaderboardBuilder().build(response);
+    }
+
+    public Segment getSegmentRecommendations(String zipCode) {
+        return null;
     }
 
     private Segment jsonToSegmentObject(String json) {

@@ -1,4 +1,4 @@
-package com.komquests.api.strava.models.segment;
+package com.komquests.api.models.strava.segment;
 
 public class Segment {
     private int id;

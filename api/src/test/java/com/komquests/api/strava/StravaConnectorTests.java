@@ -1,8 +1,9 @@
 package com.komquests.api.strava;
 
 import com.komquests.api.rest.RestService;
-import com.komquests.api.strava.models.segment.Segment;
-import com.komquests.api.strava.models.segment_leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.Segment;
+import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboard;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -37,7 +38,17 @@ public class StravaConnectorTests {
 
         StravaConnector stravaConnector = new StravaConnector(restService);
         SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(1);
-        //assertNull(segment);
+        assertNotNull(segmentLeaderboard);
+    }
+
+    @Test
+    public void testGetSegmentRecommendations() {
+        RestService restService = Mockito.mock(RestService.class);
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidResponse());
+
+        StravaConnector stravaConnector = new StravaConnector(restService);
+        Segment segment = stravaConnector.getSegmentRecommendations("78660");
+        //assertNotNull(segment);
     }
 
     private String getValidResponse() {
