@@ -36,14 +36,8 @@ public class SegmentLeaderboardBuilder {
     private SegmentLeaderboardEntry getSegmentLeaderboardEntryFromStart(Queue<String> lines) {
         String nameRow = lines.remove();
         String speedRow = lines.remove();
-        lines.remove();
         String powerRow = lines.remove();
-        if (lines.peek().contains("power-meter")) {
-            lines.remove();
-        }
-        lines.remove();
         String timeRow = lines.remove();
-
         return buildLeaderboardFromRowData(nameRow, speedRow, powerRow, timeRow);
     }
 
@@ -64,15 +58,15 @@ public class SegmentLeaderboardBuilder {
     }
 
     private String getSpeedFromSpeedRow(String row) {
-        String startTrim = "<td class='hidden-xs'>";
+        String startTrim = "<td> class='hidden-xs'>";
         String endTrim = "<abbr class='unit' ";
 
         return getElementFromRow(row, startTrim, endTrim);
     }
 
     private int getPowerFromPowerRow(String row) {
-        String startTrim = "";
-        String endTrim = "<abbr class='unit' title='watts'>W</abbr>";
+        String startTrim = "<td> class='hidden-xs text-nowrap'>";
+        String endTrim = "<abbr class='unit' ";
 
         String number = getElementFromRow(row, startTrim, endTrim);
         if (number == null) {
@@ -89,9 +83,15 @@ public class SegmentLeaderboardBuilder {
 
     private String getTimeFromTimeRow(String row) {
         String startTrim = "\">";
-        String endTrim = "</a></td>";
+        String endTrim = "<abbr class='unit' title='second'>s</abbr></a></td></tr>";
+        String element = getElementFromRow(row, startTrim, endTrim);
+        if (element == null) {
+            startTrim = "\">";
+            endTrim = "</a></td></tr>";
+            element = getElementFromRow(row, startTrim, endTrim);
+        }
 
-        return getElementFromRow(row, startTrim, endTrim);
+        return element;
     }
 
     private String getElementFromRow(String row, String startTrim, String endTrim) {
@@ -121,7 +121,19 @@ public class SegmentLeaderboardBuilder {
     }
 
     private Queue<String> getLineQueue(String rawLeaderboardData) {
-        String [] lines = rawLeaderboardData.split("\n");
-        return new LinkedList<>(Arrays.asList(lines));
+        Queue<String> lines = new LinkedList<>();
+
+        String[] rows = rawLeaderboardData.split("<tr");
+        for (String row : rows) {
+
+            String[] cells = row.split("<td");
+            for (String cell : cells) {
+                cell = "<td>" + cell;
+                cell = cell.replace("<td>>", "<td>");
+                lines.add(cell);
+            }
+        }
+
+        return lines;
     }
 }

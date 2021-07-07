@@ -30,6 +30,11 @@ public class CoordinatesRangeCalculator {
         return coordinatesUpdatedWest;
     }
 
+    public Coordinates calculateWestCoordinates(Coordinates coordinates, double miles) {
+        double meters = milesToMeters(miles);
+        return moveCoordinatesInDirection(coordinates, meters, WEST_AZIMUTH);
+    }
+
     private Coordinates moveCoordinatesInDirection(Coordinates startCoordinates, double distance, double direction) {
         Double latitude = startCoordinates.getLatitude();
         Double longitude = startCoordinates.getLongitude();
