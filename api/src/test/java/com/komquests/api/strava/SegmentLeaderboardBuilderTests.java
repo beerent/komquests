@@ -1,6 +1,6 @@
 package com.komquests.api.strava;
 
-import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

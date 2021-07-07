@@ -1,7 +1,7 @@
 package com.komquests.api.strava;
 
-import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboard;
-import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboardEntry;
+import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboardEntry;
 
 import java.util.*;
 

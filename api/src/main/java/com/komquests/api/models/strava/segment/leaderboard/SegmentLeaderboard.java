@@ -1,4 +1,4 @@
-package com.komquests.api.models.strava.segment_leaderboard;
+package com.komquests.api.models.strava.segment.leaderboard;
 
 import java.util.List;
 

@@ -1,19 +1,19 @@
 package com.komquests.api.models.strava.location;
 
 public class Coordinates {
-    private String longitude;
-    private String latitude;
+    private Double longitude;
+    private Double latitude;
 
-    public Coordinates(String longitude, String latitude) {
-        this.longitude = longitude;
+    public Coordinates(double latitude, double longitude) {
         this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    public String getLongitude() {
-        return this.longitude;
-    }
-
-    public String getLatitude() {
+    public Double getLatitude() {
         return this.latitude;
+    }
+
+    public Double getLongitude() {
+        return this.longitude;
     }
 }

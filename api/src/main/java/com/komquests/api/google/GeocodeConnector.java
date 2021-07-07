@@ -1,12 +1,9 @@
 package com.komquests.api.google;
 
 import com.google.gson.Gson;
-import com.komquests.api.config.ConfigReader;
 import com.komquests.api.models.strava.location.Coordinates;
-import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,10 +36,10 @@ public class GeocodeConnector {
 
     private Coordinates getCoordinatesFromJsonMap(Map jsonMap) {
         Map location = (Map) ((Map) ((Map) ((ArrayList) jsonMap.get("results")).get(0)).get("geometry")).get("location");
-        String longitude = String.valueOf(location.get("lng"));
-        String latitude = String.valueOf(location.get("lat"));
+        Double latitude = (Double) location.get("lat");
+        Double longitude = (Double) location.get("lng");
 
-        return new Coordinates(longitude, latitude);
+        return new Coordinates(latitude, longitude);
     }
 
     private boolean isValidResponse(String status) {

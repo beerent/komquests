@@ -2,13 +2,20 @@ package com.komquests.api.strava;
 
 import com.google.gson.Gson;
 import com.komquests.api.http.HttpConnector;
+import com.komquests.api.models.strava.location.Coordinates;
+import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.rest.RestService;
 import com.komquests.api.models.strava.segment.Segment;
-import com.komquests.api.models.strava.segment_leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class StravaConnector {
     private static final String SEGMENT_ENDPOINT = "https://www.strava.com/api/v3/segments";
     private static final String SEGMENT_LEADERBOARD_ENDPOINT = "https://www.strava.com/segments";
+    private static final String SEGMENT_RECOMMENDATION_ENDPOINT = "https://www.strava.com/api/v3/segments/explore";
     private static final String SEGMENT_LEADERBOARD_START_TRIM_KEYWORD = "<h2 class='text-title1'>Overall Leaderboard</h2>";
     private static final String SEGMENT_LEADERBOARD_END_TRIM_KEYWORD = "</div>";
     private RestService restService;
@@ -42,8 +49,20 @@ public class StravaConnector {
         return new SegmentLeaderboardBuilder().build(response);
     }
 
-    public Segment getSegmentRecommendations(String zipCode) {
-        return null;
+    public List<Segment> getSegmentRecommendations(SegmentSearchRequest segmentSearchRequest) {
+        Coordinates southWestCoordinates = segmentSearchRequest.getSouthWestCoordinates();
+        Coordinates northEastCoordinates = segmentSearchRequest.getNorthEastCoordinates();
+
+        String requestUrl = SEGMENT_RECOMMENDATION_ENDPOINT;
+        Map<String, String> queryParams = buildGetSegmentRecommendationsQueryParams(southWestCoordinates, northEastCoordinates);
+
+        String response = this.restService.get(requestUrl, queryParams);
+
+        if (!isValidResponse(response)) {
+            return null;
+        }
+
+        return new SegmentRecommendationBuilder().build(response);
     }
 
     private Segment jsonToSegmentObject(String json) {
@@ -56,6 +75,14 @@ public class StravaConnector {
 
     private String buildGetSegmentLeaderboardRequestUrl(int id) {
         return String.format("%s/%s", SEGMENT_LEADERBOARD_ENDPOINT, id);
+    }
+
+    private Map<String, String> buildGetSegmentRecommendationsQueryParams(Coordinates southWestCoordinates, Coordinates northEastCoordinates) {
+        String boundsValue = String.format("%s,%s,%s,%s",
+                southWestCoordinates.getLatitude(), southWestCoordinates.getLongitude(),
+                northEastCoordinates.getLatitude(), northEastCoordinates.getLongitude());
+
+        return new HashMap<String, String>() {{ put("bounds", boundsValue); }};
     }
 
     private boolean isValidResponse(String response) {
