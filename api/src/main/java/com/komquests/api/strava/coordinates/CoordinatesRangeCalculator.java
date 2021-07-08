@@ -30,6 +30,21 @@ public class CoordinatesRangeCalculator {
         return coordinatesUpdatedWest;
     }
 
+    public Coordinates calculateNorthCoordinates(Coordinates coordinates, double miles) {
+        double meters = milesToMeters(miles);
+        return moveCoordinatesInDirection(coordinates, meters, NORTH_AZIMUTH);
+    }
+
+    public Coordinates calculateSouthCoordinates(Coordinates coordinates, double miles) {
+        double meters = milesToMeters(miles);
+        return moveCoordinatesInDirection(coordinates, meters, SOUTH_AZIMUTH);
+    }
+
+    public Coordinates calculateEastCoordinates(Coordinates coordinates, double miles) {
+        double meters = milesToMeters(miles);
+        return moveCoordinatesInDirection(coordinates, meters, EAST_AZIMUTH);
+    }
+
     public Coordinates calculateWestCoordinates(Coordinates coordinates, double miles) {
         double meters = milesToMeters(miles);
         return moveCoordinatesInDirection(coordinates, meters, WEST_AZIMUTH);
