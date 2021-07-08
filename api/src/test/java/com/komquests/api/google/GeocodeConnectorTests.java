@@ -12,20 +12,20 @@ public class GeocodeConnectorTests {
     @Test
     public void testGeocodeConnectorReceivesCoordinatesFromValidAddress() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidResponse());
+        Mockito.when(restService.get(Mockito.anyString(), Mockito.anyMap())).thenReturn(getValidResponse());
 
         GeocodeConnector geocodeConnector = new GeocodeConnector(restService);
 
         String address = "78660";
         Coordinates coordinates = geocodeConnector.getCoordinates(address);
-        assertEquals(coordinates.getLongitude(), "12345.54321");
-        assertEquals(coordinates.getLatitude(), "-12345.54321");
+        assertEquals(coordinates.getLongitude(), 12345.54321);
+        assertEquals(coordinates.getLatitude(), -12345.54321);
     }
 
     @Test
     public void testGeocodeConnectorReceivesCoordinatesFromInvalidAddress() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString())).thenReturn(getInvalidResponse());
+        Mockito.when(restService.get(Mockito.anyString(), Mockito.anyMap())).thenReturn(getInvalidResponse());
 
         GeocodeConnector geocodeConnector = new GeocodeConnector(restService);
 
