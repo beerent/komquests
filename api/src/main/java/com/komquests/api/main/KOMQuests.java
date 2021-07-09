@@ -6,8 +6,10 @@ import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
+import com.komquests.api.rest.StravaApiTokenRetriever;
 import com.komquests.api.strava.StravaConnector;
 import com.komquests.api.strava.coordinates.CoordinatesRangeCalculator;
 
@@ -20,11 +22,14 @@ public class KOMQuests {
         File f = new File("/Users/beerent/.komquests/config");
         ConfigReader configReader = new ConfigReader(f);
 
-        RestService googleRestService = new RestService(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
+        ApiToken googleApiToken = new ApiToken(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
+        RestService googleRestService = new RestService(googleApiToken);
         GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
 
-        RestService stravaRestService = new RestService(configReader.getValue("strava_token"), AuthenticationType.BEARER);
-        StravaConnector stravaConnector = new StravaConnector(stravaRestService);
+        ApiToken stravaApiToken = new ApiToken(configReader.getValue("strava_token"), AuthenticationType.BEARER);
+        RestService stravaRestService = new RestService(stravaApiToken);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(stravaRestService);
+        StravaConnector stravaConnector = new StravaConnector(stravaRestService, stravaApiTokenRetriever);
 
         List<Segment> achiavableSegments = new ArrayList<>();
         Coordinates coordinates = geocodeConnector.getCoordinates("78660");

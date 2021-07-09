@@ -2,11 +2,14 @@ package com.komquests.api.strava;
 
 import com.google.gson.Gson;
 import com.komquests.api.http.HttpConnector;
+import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
+import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.rest.StravaApiTokenRetriever;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +22,11 @@ public class StravaConnector {
     private static final String SEGMENT_LEADERBOARD_START_TRIM_KEYWORD = "<h2 class='text-title1'>Overall Leaderboard</h2>";
     private static final String SEGMENT_LEADERBOARD_END_TRIM_KEYWORD = "</div>";
     private RestService restService;
+    private final StravaApiTokenRetriever stravaApiTokenRetriever;
 
-    public StravaConnector(RestService restService) {
+    public StravaConnector(RestService restService, StravaApiTokenRetriever stravaApiTokenRetriever) {
         this.restService = restService;
+        this.stravaApiTokenRetriever = stravaApiTokenRetriever;
     }
 
     public Segment getSegment(int id) {
@@ -32,8 +37,18 @@ public class StravaConnector {
             return null;
         }
 
+        if (isApiTokenExpired(response)) {
+            refreshApiToken();
+            return getSegment(id);
+        }
+
         Segment segment = jsonToSegmentObject(response);
         return segment;
+    }
+
+    private void refreshApiToken() {
+        String apiToken = this.stravaApiTokenRetriever.fetch();
+        this.restService.getApiToken().setApiToken(apiToken);
     }
 
     public SegmentLeaderboard getSegmentLeaderboard(int id) {
@@ -87,5 +102,9 @@ public class StravaConnector {
 
     private boolean isValidResponse(String response) {
         return response != null;
+    }
+
+    private boolean isApiTokenExpired(String response) {
+        return this.stravaApiTokenRetriever.isExpired(response);
     }
 }

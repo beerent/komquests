@@ -1,4 +1,5 @@
 package com.komquests.api.rest;
+import com.komquests.api.models.rest.ApiToken;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -9,17 +10,21 @@ import java.util.Map;
 
 @Service
 public class RestService {
-    private String token;
-    private AuthenticationType authenticationType;
+    private static final String GET = "GET";
+    private static final String POST = "POST";
+
+    private final ApiToken apiToken;
 
     public RestService() {
-        this.token = null;
-        this.authenticationType = AuthenticationType.INVALID;
+        this.apiToken = null;
     }
 
-    public RestService(String token, AuthenticationType authenticationType) {
-        this.token = token;
-        this.authenticationType = authenticationType;
+    public RestService(ApiToken apiToken) {
+        this.apiToken = apiToken;
+    }
+
+    public ApiToken getApiToken() {
+        return this.apiToken;
     }
 
     public String get(String targetUrl) {
@@ -27,13 +32,25 @@ public class RestService {
     }
 
     public String get(String targetUrl, Map<String, String> queryParams) {
+        return request(GET, targetUrl, queryParams);
+    }
+
+    public String post(String targetUrl) {
+        return post(targetUrl, new HashMap<>());
+    }
+
+    public String post(String targetUrl, Map<String, String> queryParams) {
+        return request(POST, targetUrl, queryParams);
+    }
+
+    private String request(String method, String targetUrl, Map<String, String> queryParams) {
         if (isQueryAuthentication()) {
             addAuthenticationToQuery(queryParams);
         }
 
         targetUrl = new QueryBuilder().addQueryParamsToUrl(targetUrl, queryParams);
 
-        HttpURLConnection conn = buildHttpUrlConnection(targetUrl, "GET");
+        HttpURLConnection conn = buildHttpUrlConnection(targetUrl, method);
         if (!isValidHttpUrlConnection(conn)) {
             return null;
         }
@@ -65,20 +82,20 @@ public class RestService {
     }
 
     private boolean isBearerAuthentication() {
-        return this.authenticationType == AuthenticationType.BEARER;
+        return this.apiToken.getAuthenticationType() == AuthenticationType.BEARER;
     }
 
     private boolean isQueryAuthentication() {
-        return this.authenticationType == AuthenticationType.QUERY;
+        return this.apiToken.getAuthenticationType() == AuthenticationType.QUERY;
     }
 
     private void setConnectionBearerAuthentication(HttpURLConnection conn) {
-        String authString = "Bearer " + token;
+        String authString = "Bearer " + apiToken.getToken();
         conn.setRequestProperty("Authorization", authString);
     }
 
     private void addAuthenticationToQuery(Map<String, String> queryParams) {
-        queryParams.put("key", this.token);
+        queryParams.put("key", this.apiToken.getToken());
     }
 
     private String getResponseFromRequest(InputStreamReader inputStreamReader) {

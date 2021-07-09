@@ -1,10 +1,13 @@
 package com.komquests.api.strava;
 
+import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
+import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.rest.StravaApiTokenRetriever;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -18,7 +21,9 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidResponse());
 
-        StravaConnector stravaConnector = new StravaConnector(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+
+        StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         Segment segment = stravaConnector.getSegment(1);
         assertNotNull(segment);
     }
@@ -28,7 +33,9 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(null);
 
-        StravaConnector stravaConnector = new StravaConnector(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+
+        StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         Segment segment = stravaConnector.getSegment(-1);
         assertNull(segment);
     }
@@ -38,7 +45,9 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidLeaderboardResponse());
 
-        StravaConnector stravaConnector = new StravaConnector(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+
+        StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(1);
         assertNotNull(segmentLeaderboard);
     }
@@ -51,12 +60,28 @@ public class StravaConnectorTests {
         Coordinates coordinates = new Coordinates(30.446380, -97.573890);
         SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1.5);
 
-        StravaConnector stravaConnector = new StravaConnector(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+
+        StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         List<Segment> segments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
 
         assertEquals(10, segments.size());
         assertEquals("Jesse's hill", segments.get(0).getName());
         assertEquals("Hidden Lake Crossing East", segments.get(9).getName());
+    }
+
+    @Test
+    public void testCanRefreshApiToken() {
+        ApiToken apiToken = new ApiToken("old_api_token", AuthenticationType.BEARER);
+        RestService restService = Mockito.spy(new RestService(apiToken));
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(getExpiredTokenResponse()).thenReturn(getValidResponse());
+
+        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService));
+        Mockito.when(stravaApiTokenRetriever.fetch()).thenReturn("new_api_key");
+
+        StravaConnector stravaConnector = Mockito.spy(new StravaConnector(restService, stravaApiTokenRetriever));
+        Segment segment = stravaConnector.getSegment(1);
+        assertNotNull(segment);
     }
 
     private String getValidResponse() {
@@ -1633,6 +1658,19 @@ public class StravaConnectorTests {
                 "            \"starred\": false,\n" +
                 "            \"elevation_profile\": \"https://d3o5xota0a1fcr.cloudfront.net/v6/charts/JTNHSSOF46O2ADQGEAX6H3VQB6JIRT3MXP4PNVTWST4F6BSI5C3R5MATLDK5R7KRYGW22VD6PEAXMH7TPMYKS===\",\n" +
                 "            \"local_legend_enabled\": true\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+    }
+
+    private String getExpiredTokenResponse() {
+        return "{\n" +
+                "    \"message\": \"Authorization Error\",\n" +
+                "    \"errors\": [\n" +
+                "        {\n" +
+                "            \"resource\": \"Application\",\n" +
+                "            \"field\": \"\",\n" +
+                "            \"code\": \"invalid\"\n" +
                 "        }\n" +
                 "    ]\n" +
                 "}";
