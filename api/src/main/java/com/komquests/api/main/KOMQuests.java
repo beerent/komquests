@@ -26,10 +26,12 @@ public class KOMQuests {
         RestService googleRestService = new RestService(googleApiToken);
         GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
 
-        ApiToken stravaApiToken = new ApiToken(configReader.getValue("strava_token"), AuthenticationType.BEARER);
-        RestService stravaRestService = new RestService(stravaApiToken);
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(stravaRestService);
-        StravaConnector stravaConnector = new StravaConnector(stravaRestService, stravaApiTokenRetriever);
+        ApiToken stravaApiTokenRetrieverApiToken = new ApiToken(configReader.getValue("strava_refresh_token"), AuthenticationType.BEARER);
+        RestService stravaApiTokenRetrieverRestService = new RestService(stravaApiTokenRetrieverApiToken);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(stravaApiTokenRetrieverRestService);
+
+        RestService stravaConnectorRestService = new RestService(new ApiToken("", AuthenticationType.BEARER));
+        StravaConnector stravaConnector = new StravaConnector(stravaConnectorRestService, stravaApiTokenRetriever);
 
         List<Segment> achiavableSegments = new ArrayList<>();
         Coordinates coordinates = geocodeConnector.getCoordinates("78660");

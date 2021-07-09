@@ -2,13 +2,11 @@ package com.komquests.api.strava;
 
 import com.google.gson.Gson;
 import com.komquests.api.http.HttpConnector;
-import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.strava.location.Coordinates;
-import com.komquests.api.models.strava.segment.SegmentSearchRequest;
-import com.komquests.api.rest.AuthenticationType;
-import com.komquests.api.rest.RestService;
 import com.komquests.api.models.strava.segment.Segment;
+import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
 
 import java.util.HashMap;
@@ -48,7 +46,10 @@ public class StravaConnector {
 
     private void refreshApiToken() {
         String apiToken = this.stravaApiTokenRetriever.fetch();
-        this.restService.getApiToken().setApiToken(apiToken);
+
+        if (this.restService.getApiToken() != null) {
+            this.restService.getApiToken().setApiToken(apiToken);
+        }
     }
 
     public SegmentLeaderboard getSegmentLeaderboard(int id) {
@@ -75,6 +76,11 @@ public class StravaConnector {
 
         if (!isValidResponse(response)) {
             return null;
+        }
+
+        if (isApiTokenExpired(response)) {
+            refreshApiToken();
+            return getSegmentRecommendations(segmentSearchRequest);
         }
 
         return new SegmentRecommendationBuilder().build(response);

@@ -1,12 +1,10 @@
 package com.komquests.api.strava;
 
-import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.strava.location.Coordinates;
-import com.komquests.api.models.strava.segment.SegmentSearchRequest;
-import com.komquests.api.rest.AuthenticationType;
-import com.komquests.api.rest.RestService;
 import com.komquests.api.models.strava.segment.Segment;
+import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -71,9 +69,8 @@ public class StravaConnectorTests {
     }
 
     @Test
-    public void testCanRefreshApiToken() {
-        ApiToken apiToken = new ApiToken("old_api_token", AuthenticationType.BEARER);
-        RestService restService = Mockito.spy(new RestService(apiToken));
+    public void testGetSegmentCanRefreshApiTokenWhenExpired() {
+        RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getExpiredTokenResponse()).thenReturn(getValidResponse());
 
         StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService));
@@ -82,6 +79,25 @@ public class StravaConnectorTests {
         StravaConnector stravaConnector = Mockito.spy(new StravaConnector(restService, stravaApiTokenRetriever));
         Segment segment = stravaConnector.getSegment(1);
         assertNotNull(segment);
+    }
+
+    @Test
+    public void testGetSegmentRecommendationsCanRefreshApiTokenWhenExpired() {
+        RestService restService = Mockito.mock(RestService.class);
+        Mockito.when(restService.get(Mockito.anyString(), Mockito.anyMap())).thenReturn(getExpiredTokenResponse()).thenReturn(getValidSegmentSearchResponse());
+
+        Coordinates coordinates = new Coordinates(30.446380, -97.573890);
+        SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1.5);
+
+        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService));
+        Mockito.when(stravaApiTokenRetriever.fetch()).thenReturn("new_api_key");
+
+        StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
+        List<Segment> segments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
+
+        assertEquals(10, segments.size());
+        assertEquals("Jesse's hill", segments.get(0).getName());
+        assertEquals("Hidden Lake Crossing East", segments.get(9).getName());
     }
 
     private String getValidResponse() {
