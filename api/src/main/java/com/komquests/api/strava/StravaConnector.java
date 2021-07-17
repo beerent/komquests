@@ -2,10 +2,13 @@ package com.komquests.api.strava;
 
 import com.google.gson.Gson;
 import com.komquests.api.http.HttpConnector;
+import com.komquests.api.models.rest.ApiToken;
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
 
@@ -19,6 +22,7 @@ public class StravaConnector {
     private static final String SEGMENT_RECOMMENDATION_ENDPOINT = "https://www.strava.com/api/v3/segments/explore";
     private static final String SEGMENT_LEADERBOARD_START_TRIM_KEYWORD = "<h2 class='text-title1'>Overall Leaderboard</h2>";
     private static final String SEGMENT_LEADERBOARD_END_TRIM_KEYWORD = "</div>";
+    private static final int UNAUTHORIZED_RESPONSE_CODE = 401;
     private RestService restService;
     private final StravaApiTokenRetriever stravaApiTokenRetriever;
 
@@ -30,39 +34,36 @@ public class StravaConnector {
     public Segment getSegment(int id) {
         String requestUrl = buildGetSegmentRequestUrl(id);
 
-        String response = this.restService.get(requestUrl);
-        if (!isValidResponse(response)) {
+        HttpRequestResponse httpRequestResponse = this.restService.get(requestUrl);
+        if (!isValidResponse(httpRequestResponse)) {
             return null;
         }
 
-        if (isApiTokenExpired(response)) {
+        if (isApiTokenExpired(httpRequestResponse)) {
             refreshApiToken();
             return getSegment(id);
         }
 
-        Segment segment = jsonToSegmentObject(response);
+        String body = httpRequestResponse.getBody();
+        Segment segment = jsonToSegmentObject(body);
         return segment;
     }
 
     private void refreshApiToken() {
         String apiToken = this.stravaApiTokenRetriever.fetch();
-
-        if (this.restService.getApiToken() != null) {
-            this.restService.getApiToken().setApiToken(apiToken);
-        }
+        this.restService.setApiToken(new ApiToken(apiToken, AuthenticationType.BEARER));
     }
 
     public SegmentLeaderboard getSegmentLeaderboard(int id) {
         String requestUrl = buildGetSegmentLeaderboardRequestUrl(id);
 
-        String response = new HttpConnector(this.restService)
-                .get(requestUrl, SEGMENT_LEADERBOARD_START_TRIM_KEYWORD, SEGMENT_LEADERBOARD_END_TRIM_KEYWORD);
+        String body = new HttpConnector(this.restService).get(requestUrl, SEGMENT_LEADERBOARD_START_TRIM_KEYWORD, SEGMENT_LEADERBOARD_END_TRIM_KEYWORD);
 
-        if (!isValidResponse(response)) {
+        if (!isValidBody(body)) {
             return null;
         }
 
-        return new SegmentLeaderboardBuilder().build(response);
+        return new SegmentLeaderboardBuilder().build(body);
     }
 
     public List<Segment> getSegmentRecommendations(SegmentSearchRequest segmentSearchRequest) {
@@ -72,18 +73,17 @@ public class StravaConnector {
         String requestUrl = SEGMENT_RECOMMENDATION_ENDPOINT;
         Map<String, String> queryParams = buildGetSegmentRecommendationsQueryParams(southWestCoordinates, northEastCoordinates);
 
-        String response = this.restService.get(requestUrl, queryParams);
-
-        if (!isValidResponse(response)) {
+        HttpRequestResponse httpRequestResponse = this.restService.get(requestUrl, queryParams);
+        if(!isValidResponse(httpRequestResponse)) {
             return null;
         }
 
-        if (isApiTokenExpired(response)) {
+        if (isApiTokenExpired(httpRequestResponse)) {
             refreshApiToken();
             return getSegmentRecommendations(segmentSearchRequest);
         }
 
-        return new SegmentRecommendationBuilder().build(response);
+        return new SegmentRecommendationBuilder().build(httpRequestResponse.getBody());
     }
 
     private Segment jsonToSegmentObject(String json) {
@@ -106,11 +106,15 @@ public class StravaConnector {
         return new HashMap<String, String>() {{ put("bounds", boundsValue); }};
     }
 
-    private boolean isValidResponse(String response) {
-        return response != null;
+    private boolean isValidResponse(HttpRequestResponse httpRequestResponse) {
+        return httpRequestResponse != null;
     }
 
-    private boolean isApiTokenExpired(String response) {
-        return this.stravaApiTokenRetriever.isExpired(response);
+    private boolean isValidBody(String body) {
+        return body != null;
+    }
+
+    private boolean isApiTokenExpired(HttpRequestResponse httpRequestResponse) {
+        return UNAUTHORIZED_RESPONSE_CODE == httpRequestResponse.getCode();
     }
 }

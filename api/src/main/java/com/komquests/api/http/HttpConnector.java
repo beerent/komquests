@@ -1,5 +1,6 @@
 package com.komquests.api.http;
 
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.rest.RestService;
 
 public class HttpConnector {
@@ -10,9 +11,8 @@ public class HttpConnector {
     }
 
     public String get(String targetUrl) {
-        String response = this.restService.get(targetUrl);
-
-        return response;
+        HttpRequestResponse httpRequestResponse = this.restService.get(targetUrl);
+        return httpRequestResponse.getBody();
     }
 
     public String get(String targetUrl, String trimStart, String trimEnd) {

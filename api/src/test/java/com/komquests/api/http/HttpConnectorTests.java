@@ -1,5 +1,6 @@
 package com.komquests.api.http;
 
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.rest.RestService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,7 +22,7 @@ public class HttpConnectorTests {
     @Test
     public void testHttpConnectorCanReturnInvalidHttpRequest() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString())).thenReturn(null);
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(new HttpRequestResponse(0, null, null));
 
         HttpConnector httpConnector = new HttpConnector(restService);
         String response = httpConnector.get("https://www.google.com");
@@ -48,7 +49,7 @@ public class HttpConnectorTests {
     @Test
     public void testHttpConnectorCanReturnTrimmedDataFromInvalidHttpRequest() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString())).thenReturn(null);
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(new HttpRequestResponse(0, null, null));
 
         HttpConnector httpConnector = new HttpConnector(restService);
         String trimStart = "fixed-bottom bg-light text-dark";
@@ -58,8 +59,8 @@ public class HttpConnectorTests {
         assertNull(response);
     }
 
-    public String getValidResponse() {
-        return "<html>\n" +
+    public HttpRequestResponse getValidResponse() {
+        return new HttpRequestResponse(0, "", "<html>\n" +
                 "  <head>\n" +
                 "    <title>Know Your Cosmos</title>\n" +
                 "\n" +
@@ -134,6 +135,6 @@ public class HttpConnectorTests {
                 "    </center>\n" +
                 "    </div>\n" +
                 "  </body>\n" +
-                "</html>\n";
+                "</html>\n");
     }
 }

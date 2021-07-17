@@ -1,5 +1,6 @@
 package com.komquests.api.strava;
 
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
@@ -19,7 +20,7 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidResponse());
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService, "", "", "");
 
         StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         Segment segment = stravaConnector.getSegment(1);
@@ -29,9 +30,9 @@ public class StravaConnectorTests {
     @Test
     public void testGetSegmentWithInvalidId() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString())).thenReturn(null);
+        Mockito.when(restService.get(Mockito.anyString())).thenReturn(new HttpRequestResponse(0, null, null));
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService, "", "", "");
 
         StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         Segment segment = stravaConnector.getSegment(-1);
@@ -43,7 +44,7 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getValidLeaderboardResponse());
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService, "", "", "");
 
         StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(1);
@@ -58,7 +59,7 @@ public class StravaConnectorTests {
         Coordinates coordinates = new Coordinates(30.446380, -97.573890);
         SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1.5);
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService);
+        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(restService, "", "", "");
 
         StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         List<Segment> segments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
@@ -73,8 +74,8 @@ public class StravaConnectorTests {
         RestService restService = Mockito.mock(RestService.class);
         Mockito.when(restService.get(Mockito.anyString())).thenReturn(getExpiredTokenResponse()).thenReturn(getValidResponse());
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService));
-        Mockito.when(stravaApiTokenRetriever.fetch()).thenReturn("new_api_key");
+        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService, "", "", ""));
+        Mockito.doReturn("new_api_key").when(stravaApiTokenRetriever).fetch();
 
         StravaConnector stravaConnector = Mockito.spy(new StravaConnector(restService, stravaApiTokenRetriever));
         Segment segment = stravaConnector.getSegment(1);
@@ -84,13 +85,14 @@ public class StravaConnectorTests {
     @Test
     public void testGetSegmentRecommendationsCanRefreshApiTokenWhenExpired() {
         RestService restService = Mockito.mock(RestService.class);
-        Mockito.when(restService.get(Mockito.anyString(), Mockito.anyMap())).thenReturn(getExpiredTokenResponse()).thenReturn(getValidSegmentSearchResponse());
+        Mockito.doReturn(getExpiredTokenResponse()).doReturn(getValidSegmentSearchResponse()).when(restService).get(Mockito.anyString(), Mockito.anyMap());
+        Mockito.doReturn(new HttpRequestResponse(null, null, null)).when(restService).post(Mockito.anyString());
 
         Coordinates coordinates = new Coordinates(30.446380, -97.573890);
         SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1.5);
 
-        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService));
-        Mockito.when(stravaApiTokenRetriever.fetch()).thenReturn("new_api_key");
+        StravaApiTokenRetriever stravaApiTokenRetriever = Mockito.spy(new StravaApiTokenRetriever(restService, "", "", ""));
+        Mockito.doReturn("new_api_key").when(stravaApiTokenRetriever).fetch();
 
         StravaConnector stravaConnector = new StravaConnector(restService, stravaApiTokenRetriever);
         List<Segment> segments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
@@ -100,8 +102,8 @@ public class StravaConnectorTests {
         assertEquals("Hidden Lake Crossing East", segments.get(9).getName());
     }
 
-    private String getValidResponse() {
-        return "{\n" +
+    private HttpRequestResponse getValidResponse() {
+        return new HttpRequestResponse(0, "", "{\n" +
                 "    \"id\": 740569,\n" +
                 "    \"resource_state\": 3,\n" +
                 "    \"name\": \"Rain Creek Fun Climb - LONG\",\n" +
@@ -169,11 +171,11 @@ public class StravaConnectorTests {
                 "        },\n" +
                 "        \"destination\": \"strava://segments/740569/local_legend?categories%5B%5D=overall\"\n" +
                 "    }\n" +
-                "}";
+                "}");
     }
 
-    public String getValidLeaderboardResponse() {
-        return "<!-- Orion-App Layout -->\n" +
+    public HttpRequestResponse getValidLeaderboardResponse() {
+        return new HttpRequestResponse(0, "", "<!-- Orion-App Layout -->\n" +
                 "<!DOCTYPE html>\n" +
                 "<html class='logged-out responsive feed3p0 old-login strava-orion responsive' dir='ltr' lang='en-US' xmlns:fb='http://www.facebook.com/2008/fbml' xmlns:og='http://opengraphprotocol.org/schema/' xmlns='http://www.w3.org/TR/html5'>\n" +
                 "<!--\n" +
@@ -1449,11 +1451,11 @@ public class StravaConnectorTests {
                 "<script src=\"https://d3nn82uaxijpm6.cloudfront.net/assets/bootstrap.min-55483ca093070244e24730190b707a18467cb78d3262a0133d34b80fc82c8636.js\"></script>\n" +
                 "\n" +
                 "</body>\n" +
-                "</html>\n";
+                "</html>\n");
     }
 
-    private String getValidSegmentSearchResponse() {
-        return "{\n" +
+    private HttpRequestResponse getValidSegmentSearchResponse() {
+        return new HttpRequestResponse(0, "", "{\n" +
                 "    \"segments\": [\n" +
                 "        {\n" +
                 "            \"id\": 12800003,\n" +
@@ -1676,11 +1678,11 @@ public class StravaConnectorTests {
                 "            \"local_legend_enabled\": true\n" +
                 "        }\n" +
                 "    ]\n" +
-                "}";
+                "}");
     }
 
-    private String getExpiredTokenResponse() {
-        return "{\n" +
+    private HttpRequestResponse getExpiredTokenResponse() {
+        return new HttpRequestResponse(401, "Unauthorized", "{\n" +
                 "    \"message\": \"Authorization Error\",\n" +
                 "    \"errors\": [\n" +
                 "        {\n" +
@@ -1689,6 +1691,6 @@ public class StravaConnectorTests {
                 "            \"code\": \"invalid\"\n" +
                 "        }\n" +
                 "    ]\n" +
-                "}";
+                "}");
     }
 }

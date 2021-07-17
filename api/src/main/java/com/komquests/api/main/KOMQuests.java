@@ -26,15 +26,11 @@ public class KOMQuests {
         RestService googleRestService = new RestService(googleApiToken);
         GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
 
-        ApiToken stravaApiTokenRetrieverApiToken = new ApiToken(configReader.getValue("strava_refresh_token"), AuthenticationType.BEARER);
-        RestService stravaApiTokenRetrieverRestService = new RestService(stravaApiTokenRetrieverApiToken);
-        StravaApiTokenRetriever stravaApiTokenRetriever = new StravaApiTokenRetriever(stravaApiTokenRetrieverRestService);
-
-        RestService stravaConnectorRestService = new RestService(new ApiToken("", AuthenticationType.BEARER));
-        StravaConnector stravaConnector = new StravaConnector(stravaConnectorRestService, stravaApiTokenRetriever);
+        StravaApiTokenRetriever stravaApiTokenRetriever = createStravaApiTokenRetriever();
+        StravaConnector stravaConnector = new StravaConnector(new RestService(), stravaApiTokenRetriever);
 
         List<Segment> achiavableSegments = new ArrayList<>();
-        Coordinates coordinates = geocodeConnector.getCoordinates("78660");
+        Coordinates coordinates = geocodeConnector.getCoordinates("23188");
         for (int i = 1; i < 11; i++) {
             coordinates = new CoordinatesRangeCalculator().calculateSouthCoordinates(coordinates, i/5);
             SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1d);
@@ -49,70 +45,16 @@ public class KOMQuests {
                 }
             }
         }
+    }
 
-        /*for (int i = 1; i < 11; i++) {
-            coordinates = new CoordinatesRangeCalculator().calculateNorthCoordinates(coordinates, i);
-            SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1d);
-            List<Segment> localSegments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
-            for (Segment segment : localSegments) {
-                double miles = segment.getDistance() / 1609.34;
-                SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < 300 && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 1d) {
-                    System.out.println("" + segment.getId() + " " + segment.getName());
-                    System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
-                    achiavableSegments.add(segment);
-                }
-            }
-        }
+    private static StravaApiTokenRetriever createStravaApiTokenRetriever() {
+        File f = new File("/Users/beerent/.komquests/config");
+        ConfigReader configReader = new ConfigReader(f);
 
-        coordinates = geocodeConnector.getCoordinates("78660");
-        for (int i = 1; i < 11; i++) {
-            coordinates = new CoordinatesRangeCalculator().calculateSouthCoordinates(coordinates, i);
-            SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1d);
-            List<Segment> localSegments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
-            for (Segment segment : localSegments) {
-                double miles = segment.getDistance() / 1609.34;
-                SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < 300 && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 1d) {
-                    System.out.println("" + segment.getId() + " " + segment.getName());
-                    System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
-                    achiavableSegments.add(segment);
-                }
-            }
-        }
+        String clientId = configReader.getValue("strava_client_id");
+        String clientSecret = configReader.getValue("strava_client_secret");
+        String refreshToken = configReader.getValue("strava_refresh_token");
 
-        coordinates = geocodeConnector.getCoordinates("78660");
-        for (int i = 1; i < 11; i++) {
-            coordinates = new CoordinatesRangeCalculator().calculateEastCoordinates(coordinates, i);
-            SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1d);
-            List<Segment> localSegments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
-            for (Segment segment : localSegments) {
-                double miles = segment.getDistance() / 1609.34;
-                SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < 300 && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 1d) {
-                    System.out.println("" + segment.getId() + " " + segment.getName());
-                    System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
-                    achiavableSegments.add(segment);
-                }
-            }
-        }
-
-        coordinates = geocodeConnector.getCoordinates("78660");
-        for (int i = 1; i < 11; i++) {
-            coordinates = new CoordinatesRangeCalculator().calculateWestCoordinates(coordinates, i);
-            SegmentSearchRequest segmentSearchRequest = new SegmentSearchRequest(coordinates, 1d);
-            List<Segment> localSegments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
-            for (Segment segment : localSegments) {
-                double miles = segment.getDistance() / 1609.34;
-                SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < 300 && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 1d) {
-                    System.out.println("" + segment.getId() + " " + segment.getName());
-                    System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
-                    achiavableSegments.add(segment);
-                }
-            }
-        }*/
-
-        int x = 4;
+        return new StravaApiTokenRetriever(new RestService(), clientId, clientSecret, refreshToken);
     }
 }

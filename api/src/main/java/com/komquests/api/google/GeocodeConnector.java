@@ -1,6 +1,7 @@
 package com.komquests.api.google;
 
 import com.google.gson.Gson;
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.rest.RestService;
 
@@ -19,8 +20,8 @@ public class GeocodeConnector {
 
     public Coordinates getCoordinates(String address) {
         Map<String, String> params = buildParams(address);
-        String response = this.restService.get(GEOCODE_ENDPOINT, params);
-        return getCoordinatesFromResponse(response);
+        HttpRequestResponse httpRequestResponse = this.restService.get(GEOCODE_ENDPOINT, params);
+        return getCoordinatesFromResponse(httpRequestResponse.getBody());
     }
 
     private Coordinates getCoordinatesFromResponse(String response) {

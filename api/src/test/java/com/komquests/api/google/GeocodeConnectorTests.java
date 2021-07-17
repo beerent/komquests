@@ -1,5 +1,6 @@
 package com.komquests.api.google;
 
+import com.komquests.api.models.rest.HttpRequestResponse;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.rest.RestService;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,8 @@ public class GeocodeConnectorTests {
         assertNull(coordinates);
     }
 
-    private String getValidResponse() {
-        return "{\n" +
+    private HttpRequestResponse getValidResponse() {
+        return new HttpRequestResponse(0, "",  "{\n" +
                 "    \"results\": [\n" +
                 "        {\n" +
                 "            \"address_components\": [\n" +
@@ -114,13 +115,13 @@ public class GeocodeConnectorTests {
                 "        }\n" +
                 "    ],\n" +
                 "    \"status\": \"OK\"\n" +
-                "}";
+                "}");
     }
 
-    private String getInvalidResponse() {
-        return "{\n" +
+    private HttpRequestResponse getInvalidResponse() {
+        return new HttpRequestResponse(0, "", "{\n" +
                 "    \"results\": [],\n" +
                 "    \"status\": \"ZERO_RESULTS\"\n" +
-                "}";
+                "}");
     }
 }
