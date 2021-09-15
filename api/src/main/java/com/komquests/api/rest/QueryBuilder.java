@@ -16,7 +16,7 @@ public class QueryBuilder {
             return targetUrl;
         }
 
-        String query = "?";
+        String query = "";
         for (String key : queryParams.keySet()) {
             String value = queryParams.get(key);
 
@@ -27,7 +27,7 @@ public class QueryBuilder {
 
             query += String.format("%s%s=%s", and, key, value);
         }
-
-        return targetUrl + query;
+        query = query.replaceAll(" ", "%20");
+        return targetUrl + "?" + query;
     }
 }

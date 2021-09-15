@@ -1,9 +1,12 @@
 package com.komquests.api.rest;
+
 import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.rest.HttpRequestResponse;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -54,7 +57,6 @@ public class RestService {
         }
 
         targetUrl = new QueryBuilder().addQueryParamsToUrl(targetUrl, queryParams);
-
         HttpURLConnection conn = buildHttpUrlConnection(targetUrl, method);
         if (!isValidHttpUrlConnection(conn)) {
             return null;

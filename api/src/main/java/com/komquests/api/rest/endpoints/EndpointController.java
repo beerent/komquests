@@ -1,4 +1,4 @@
-package com.komquests.api.main;
+package com.komquests.api.rest.endpoints;
 
 import com.komquests.api.config.ConfigReader;
 import com.komquests.api.google.GeocodeConnector;
@@ -12,13 +12,18 @@ import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
 import com.komquests.api.strategy.SweepSearchCoordinateProvider;
 import com.komquests.api.strava.StravaConnector;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KOMQuests {
-    public static void main(String[] args) throws Exception {
+@RestController
+public class EndpointController {
+    @GetMapping("/recommend")
+    List<Segment> recommend(@RequestParam("watts") String watts, @RequestParam("address") String address) throws Exception {
         File f = new File("/Users/beerent/.komquests/config");
         ConfigReader configReader = new ConfigReader(f);
 
@@ -29,7 +34,7 @@ public class KOMQuests {
         StravaApiTokenRetriever stravaApiTokenRetriever = createStravaApiTokenRetriever();
         StravaConnector stravaConnector = new StravaConnector(new RestService(), stravaApiTokenRetriever);
 
-        Coordinates coordinates = geocodeConnector.getCoordinates("329 Johnson Rd. Freeville, NY, 13068");
+        Coordinates coordinates = geocodeConnector.getCoordinates(address);
         List<SegmentSearchRequest> segmentSearchRequests = new SweepSearchCoordinateProvider().search(new Coordinates(coordinates.getLatitude(), coordinates.getLongitude()), 5, 9);
         List<Segment> achiavableSegments = new ArrayList<>();
         List<Segment> observedSegments = new ArrayList<>();
@@ -45,7 +50,7 @@ public class KOMQuests {
                 observedSegments.add(segment);
                 double miles = segment.getDistance() / 1609.34;
                 SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < 300 && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 25d) {
+                if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 25d) {
                     System.out.println("" + segment.getId() + " " + segment.getName());
                     System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
                     achiavableSegments.add(segment);
@@ -53,7 +58,7 @@ public class KOMQuests {
             }
         }
 
-        int x = 4;
+        return observedSegments;
     }
 
     private static boolean segmentAlreadyObserved(List<Segment> observedSegments, Segment segment) {

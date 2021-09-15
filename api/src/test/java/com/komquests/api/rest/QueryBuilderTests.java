@@ -37,4 +37,14 @@ public class QueryBuilderTests {
 
         assertEquals("url?key1=value1&key2=value2", urlWithQuery);
     }
+
+    @Test
+    public void testQueryBuilderEncodesUrlParameters() {
+        String url = "url";
+        Map<String, String> params  = new HashMap<String, String>() {{ put("key", "value with spaces"); }};
+        QueryBuilder queryBuilder = new QueryBuilder();
+        String urlWithQuery = queryBuilder.addQueryParamsToUrl(url, params);
+
+        assertEquals("url?key=value%20with%20spaces", urlWithQuery);
+    }
 }
