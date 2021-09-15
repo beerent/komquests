@@ -50,7 +50,7 @@ public class EndpointController {
                 observedSegments.add(segment);
                 double miles = segment.getDistance() / 1609.34;
                 SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
-                if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0 && miles < 25d) {
+                if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0) {
                     System.out.println("" + segment.getId() + " " + segment.getName());
                     System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
                     achiavableSegments.add(segment);
