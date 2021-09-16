@@ -2,7 +2,6 @@ package com.komquests.api.rest;
 
 import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.rest.HttpRequestResponse;
-import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
 public class RestService {
     private static final String GET = "GET";
     private static final String POST = "POST";

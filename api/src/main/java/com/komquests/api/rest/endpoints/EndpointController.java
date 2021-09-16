@@ -12,19 +12,15 @@ import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
 import com.komquests.api.strategy.SweepSearchCoordinateProvider;
 import com.komquests.api.strava.StravaConnector;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-@RestController
 public class EndpointController {
-    @GetMapping("/recommend")
-    List<Segment> recommend(@RequestParam("watts") String watts, @RequestParam("address") String address) throws Exception {
-        File f = new File("/Users/beerent/.komquests/config");
+
+    public static List<Segment> recommend(int watts, String address) throws Exception {
+        File f = new File(CONFIG_FILE_PATH);
         ConfigReader configReader = new ConfigReader(f);
 
         ApiToken googleApiToken = new ApiToken(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
@@ -72,7 +68,7 @@ public class EndpointController {
     }
 
     private static StravaApiTokenRetriever createStravaApiTokenRetriever() {
-        File f = new File("/Users/beerent/.komquests/config");
+        File f = new File(CONFIG_FILE_PATH);
         ConfigReader configReader = new ConfigReader(f);
 
         String clientId = configReader.getValue("strava_client_id");

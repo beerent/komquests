@@ -1,11 +1,9 @@
 plugins {
-    id 'org.springframework.boot' version '2.5.2'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
 
 group = 'com.komquests'
-version = '0.0.1-SNAPSHOT'
+version = 'komquests'
 sourceCompatibility = '1.8'
 
 repositories {
@@ -16,11 +14,27 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'com.google.code.gson:gson:2.8.7'
-    implementation group: 'org.geotools', name: 'gt-shapefile', version: '25.0'
+    compile 'com.google.code.gson:gson:2.8.7'
+    compile group: 'org.geotools', name: 'gt-shapefile', version: '25.0'
+    compile 'org.junit.jupiter:junit-jupiter:5.7.0'
+    compile 'org.mockito:mockito-core:3.12.4'
 
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'com.komquests.api.main.ApiApplication'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    with jar
 }
 
 test {
