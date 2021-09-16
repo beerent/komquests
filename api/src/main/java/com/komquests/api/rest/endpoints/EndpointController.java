@@ -7,6 +7,7 @@ import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
+import com.komquests.api.models.strava.segment.leaderboard.SegmentRecommendation;
 import com.komquests.api.rest.AuthenticationType;
 import com.komquests.api.rest.RestService;
 import com.komquests.api.rest.StravaApiTokenRetriever;
@@ -18,8 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EndpointController {
+    private static final String CONFIG_FILE_PATH = "/home/ubuntu/.komquests/config";
+    //private static final String CONFIG_FILE_PATH = "/Users/beerent/.komquests/config";
 
-    public static List<Segment> recommend(int watts, String address) throws Exception {
+    public static List<SegmentRecommendation> recommend(int watts, String address) throws Exception {
         File f = new File(CONFIG_FILE_PATH);
         ConfigReader configReader = new ConfigReader(f);
 
@@ -32,7 +35,7 @@ public class EndpointController {
 
         Coordinates coordinates = geocodeConnector.getCoordinates(address);
         List<SegmentSearchRequest> segmentSearchRequests = new SweepSearchCoordinateProvider().search(new Coordinates(coordinates.getLatitude(), coordinates.getLongitude()), 5, 9);
-        List<Segment> achiavableSegments = new ArrayList<>();
+        List<SegmentRecommendation> recommendations = new ArrayList<>();
         List<Segment> observedSegments = new ArrayList<>();
         for (SegmentSearchRequest segmentSearchRequest : segmentSearchRequests)
         {
@@ -47,14 +50,13 @@ public class EndpointController {
                 double miles = segment.getDistance() / 1609.34;
                 SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
                 if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0) {
-                    System.out.println("" + segment.getId() + " " + segment.getName());
-                    System.out.println("\tDistance: " + miles + " miles\tPower: " + segmentLeaderboard.getFirstPlace().getPower() + " watts");
-                    achiavableSegments.add(segment);
+                    SegmentRecommendation segmentRecommendation = new SegmentRecommendation(segment, segmentLeaderboard, miles);
+                    recommendations.add(segmentRecommendation);
                 }
             }
         }
 
-        return observedSegments;
+        return recommendations;
     }
 
     private static boolean segmentAlreadyObserved(List<Segment> observedSegments, Segment segment) {
