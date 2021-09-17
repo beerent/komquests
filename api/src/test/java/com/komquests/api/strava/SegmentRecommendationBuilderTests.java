@@ -1,7 +1,6 @@
 package com.komquests.api.strava;
 
 import com.komquests.api.models.strava.segment.Segment;
-import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

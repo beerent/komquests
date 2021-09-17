@@ -1,12 +1,13 @@
 package com.komquests.api.models.strava.segment.leaderboard;
 
-public class SegmentLeaderboardEntry {
+public class CyclingSegmentLeaderboardEntry {
     String name;
     String speed;
     int power;
     String time;
 
-    public SegmentLeaderboardEntry(String name, String speed, int power, String time) {
+
+    public CyclingSegmentLeaderboardEntry(String name, String speed, int power, String time) {
         this.name = name;
         this.speed = speed;
         this.power = power;

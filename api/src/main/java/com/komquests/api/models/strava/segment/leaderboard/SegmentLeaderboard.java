@@ -2,18 +2,18 @@ package com.komquests.api.models.strava.segment.leaderboard;
 
 import java.util.List;
 
-public class SegmentLeaderboard {
-    List<SegmentLeaderboardEntry> leaderboardEntries;
+public class SegmentLeaderboard <T> {
+    List<T> leaderboardEntries;
 
-    public SegmentLeaderboard(List<SegmentLeaderboardEntry> leaderboardEntries) {
+    public SegmentLeaderboard(List<T> leaderboardEntries) {
         this.leaderboardEntries = leaderboardEntries;
     }
 
-    public SegmentLeaderboardEntry getFirstPlace() {
+    public T getFirstPlace() {
         return this.leaderboardEntries.get(0);
     }
 
-    public SegmentLeaderboardEntry getLastPlace() {
+    public T getLastPlace() {
         return this.leaderboardEntries.get(this.leaderboardEntries.size() - 1);
     }
 }

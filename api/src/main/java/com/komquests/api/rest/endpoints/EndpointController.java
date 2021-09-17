@@ -6,6 +6,8 @@ import com.komquests.api.models.rest.ApiToken;
 import com.komquests.api.models.strava.location.Coordinates;
 import com.komquests.api.models.strava.segment.Segment;
 import com.komquests.api.models.strava.segment.SegmentSearchRequest;
+import com.komquests.api.models.strava.segment.leaderboard.CyclingSegmentLeaderboardEntry;
+import com.komquests.api.models.strava.segment.leaderboard.RunningSegmentLeaderboardEntry;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentRecommendation;
 import com.komquests.api.rest.AuthenticationType;
@@ -26,8 +28,8 @@ public class EndpointController {
     //private static final String CONFIG_FILE_PATH = "/home/ubuntu/.komquests/config";
     private static final String CONFIG_FILE_PATH = "/Users/beerent/.komquests/config";
 
-    @GetMapping("/recommend")
-    List<SegmentRecommendation> recommend(@RequestParam("watts") String watts, @RequestParam("address") String address) throws Exception {
+    @GetMapping("/recommend_cycling")
+    List<SegmentRecommendation> recommendCycling(@RequestParam("watts") String watts, @RequestParam("address") String address) throws Exception {
         File f = new File(CONFIG_FILE_PATH);
         ConfigReader configReader = new ConfigReader(f);
 
@@ -44,7 +46,8 @@ public class EndpointController {
         List<Segment> observedSegments = new ArrayList<>();
         for (SegmentSearchRequest segmentSearchRequest : segmentSearchRequests)
         {
-            List<Segment> localSegments = stravaConnector.getSegmentRecommendations(segmentSearchRequest);
+            List<Segment> localSegments = stravaConnector.getCyclingSegmentRecommendations(segmentSearchRequest);
+
             for (Segment segment : localSegments) {
                 if (segmentAlreadyObserved(observedSegments, segment))
                 {
@@ -53,11 +56,50 @@ public class EndpointController {
 
                 observedSegments.add(segment);
                 double miles = segment.getDistance() / 1609.34;
-                SegmentLeaderboard segmentLeaderboard = stravaConnector.getSegmentLeaderboard(segment.getId());
+                SegmentLeaderboard<CyclingSegmentLeaderboardEntry> segmentLeaderboard = stravaConnector.getCyclingSegmentLeaderboard(segment.getId());
                 if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0) {
                     SegmentRecommendation segmentRecommendation = new SegmentRecommendation(segment, segmentLeaderboard, miles);
                     recommendations.add(segmentRecommendation);
                 }
+            }
+        }
+
+        return recommendations;
+    }
+
+    @GetMapping("/recommend_running")
+    List<SegmentRecommendation> recommendRunning(@RequestParam("pace") String pace, @RequestParam("address") String address) throws Exception {
+        File f = new File(CONFIG_FILE_PATH);
+        ConfigReader configReader = new ConfigReader(f);
+
+        ApiToken googleApiToken = new ApiToken(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
+        RestService googleRestService = new RestService(googleApiToken);
+        GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
+
+        StravaApiTokenRetriever stravaApiTokenRetriever = createStravaApiTokenRetriever();
+        StravaConnector stravaConnector = new StravaConnector(new RestService(), stravaApiTokenRetriever);
+
+        Coordinates coordinates = geocodeConnector.getCoordinates(address);
+        List<SegmentSearchRequest> segmentSearchRequests = new SweepSearchCoordinateProvider().search(new Coordinates(coordinates.getLatitude(), coordinates.getLongitude()), 5, 9);
+        List<SegmentRecommendation> recommendations = new ArrayList<>();
+        List<Segment> observedSegments = new ArrayList<>();
+        for (SegmentSearchRequest segmentSearchRequest : segmentSearchRequests)
+        {
+            List<Segment> localSegments = stravaConnector.getRunSegmentRecommendations(segmentSearchRequest);
+
+            for (Segment segment : localSegments) {
+                if (segmentAlreadyObserved(observedSegments, segment))
+                {
+                    continue;
+                }
+
+                observedSegments.add(segment);
+                double miles = segment.getDistance() / 1609.34;
+                SegmentLeaderboard<RunningSegmentLeaderboardEntry> segmentLeaderboard = stravaConnector.getRunningSegmentLeaderboard(segment.getId());
+                //if (segmentLeaderboard.getFirstPlace().getPower() < Integer.valueOf(watts) && segmentLeaderboard.getFirstPlace().getPower() > 0) {
+                    SegmentRecommendation segmentRecommendation = new SegmentRecommendation(segment, segmentLeaderboard, miles);
+                    recommendations.add(segmentRecommendation);
+                //}
             }
         }
 

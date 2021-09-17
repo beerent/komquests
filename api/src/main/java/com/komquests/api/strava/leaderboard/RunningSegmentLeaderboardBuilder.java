@@ -1,25 +1,28 @@
-package com.komquests.api.strava;
+package com.komquests.api.strava.leaderboard;
 
+import com.komquests.api.models.strava.segment.leaderboard.RunningSegmentLeaderboardEntry;
 import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboard;
-import com.komquests.api.models.strava.segment.leaderboard.SegmentLeaderboardEntry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
-public class SegmentLeaderboardBuilder {
+public class RunningSegmentLeaderboardBuilder {
     public SegmentLeaderboard build(String rawLeaderboardData) {
         Queue<String> lines = getLineQueue(rawLeaderboardData);
 
-        List<SegmentLeaderboardEntry> leaderboardEntries = new ArrayList<>();
-        SegmentLeaderboardEntry segmentLeaderboardEntry = getNextSegmentLeaderboardEntry(lines);
-        while (segmentLeaderboardEntry != null) {
-            leaderboardEntries.add(segmentLeaderboardEntry);
-            segmentLeaderboardEntry = getNextSegmentLeaderboardEntry(lines);
+        List<RunningSegmentLeaderboardEntry> leaderboardEntries = new ArrayList<>();
+        RunningSegmentLeaderboardEntry runningSegmentLeaderboardEntry = getNextSegmentLeaderboardEntry(lines);
+        while (runningSegmentLeaderboardEntry != null) {
+            leaderboardEntries.add(runningSegmentLeaderboardEntry);
+            runningSegmentLeaderboardEntry = getNextSegmentLeaderboardEntry(lines);
         }
 
         return new SegmentLeaderboard(leaderboardEntries);
     }
 
-    private SegmentLeaderboardEntry getNextSegmentLeaderboardEntry(Queue<String> lines) {
+    private RunningSegmentLeaderboardEntry getNextSegmentLeaderboardEntry(Queue<String> lines) {
         while (!lines.isEmpty()) {
             String line = lines.remove();
 
@@ -33,21 +36,19 @@ public class SegmentLeaderboardBuilder {
         return null;
     }
 
-    private SegmentLeaderboardEntry getSegmentLeaderboardEntryFromStart(Queue<String> lines) {
+    private RunningSegmentLeaderboardEntry getSegmentLeaderboardEntryFromStart(Queue<String> lines) {
         String nameRow = lines.remove();
-        String speedRow = lines.remove();
-        String powerRow = lines.remove();
+        String paceRow = lines.remove();
         String timeRow = lines.remove();
-        return buildLeaderboardFromRowData(nameRow, speedRow, powerRow, timeRow);
+        return buildLeaderboardFromRowData(nameRow, paceRow, timeRow);
     }
 
-    private SegmentLeaderboardEntry buildLeaderboardFromRowData(String nameRow, String speedRow, String powerRow, String timeRow) {
+    private RunningSegmentLeaderboardEntry buildLeaderboardFromRowData(String nameRow, String speedRow, String timeRow) {
         String name = getNameFromNameRow(nameRow);
-        String speed = getSpeedFromSpeedRow(speedRow);
-        int power = getPowerFromPowerRow(powerRow);
+        String pace = getPaceFromPaceRow(speedRow);
         String time = getTimeFromTimeRow(timeRow);
 
-        return new SegmentLeaderboardEntry(name, speed, power, time);
+        return new RunningSegmentLeaderboardEntry(name, pace, time);
     }
 
     private String getNameFromNameRow(String row) {
@@ -57,28 +58,11 @@ public class SegmentLeaderboardBuilder {
         return getElementFromRow(row, startTrim, endTrim);
     }
 
-    private String getSpeedFromSpeedRow(String row) {
+    private String getPaceFromPaceRow(String row) {
         String startTrim = "<td> class='hidden-xs'>";
         String endTrim = "<abbr class='unit' ";
 
         return getElementFromRow(row, startTrim, endTrim);
-    }
-
-    private int getPowerFromPowerRow(String row) {
-        String startTrim = "<td> class='hidden-xs text-nowrap'>";
-        String endTrim = "<abbr class='unit' ";
-
-        String number = getElementFromRow(row, startTrim, endTrim);
-        if (number == null) {
-            return 0;
-        }
-
-        try {
-            return Integer.parseInt(number);
-        } catch (Exception e) {
-        }
-
-        return 0;
     }
 
     private String getTimeFromTimeRow(String row) {
