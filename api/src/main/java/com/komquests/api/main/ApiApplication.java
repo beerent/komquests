@@ -1,18 +1,13 @@
 package com.komquests.api.main;
 
-import com.google.gson.Gson;
-import com.komquests.api.models.strava.segment.leaderboard.SegmentRecommendation;
-import com.komquests.api.rest.endpoints.EndpointController;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
-import java.util.List;
-
+@SpringBootApplication
+@ComponentScan("com.komquests.api.rest.endpoints")
 public class ApiApplication {
-
-    public static void main(String[] args) throws Exception {
-        int watts = Integer.valueOf(args[0]);
-        String address = args[1];
-
-        List<SegmentRecommendation> recommendations = EndpointController.recommend(watts, address);
-        System.out.println(new Gson().toJsonTree(recommendations));
+    public static void main(String[] args) {
+        SpringApplication.run(ApiApplication.class, args);
     }
 }

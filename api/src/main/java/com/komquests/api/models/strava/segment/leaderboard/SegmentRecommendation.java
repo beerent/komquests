@@ -12,4 +12,16 @@ public class SegmentRecommendation {
         this.segmentLeaderboard = segmentLeaderboard;
         this.miles = miles;
     }
+
+    public Segment getSegment() {
+        return segment;
+    }
+
+    public SegmentLeaderboard getSegmentLeaderboard() {
+        return segmentLeaderboard;
+    }
+
+    public double getMiles() {
+        return miles;
+    }
 }
