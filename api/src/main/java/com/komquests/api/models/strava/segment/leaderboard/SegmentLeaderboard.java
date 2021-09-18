@@ -9,6 +9,10 @@ public class SegmentLeaderboard <T> {
         this.leaderboardEntries = leaderboardEntries;
     }
 
+    public List<T> getLeaderboardEntries() {
+        return this.leaderboardEntries;
+    }
+
     public T getFirstPlace() {
         return this.leaderboardEntries.get(0);
     }

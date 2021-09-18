@@ -30,6 +30,7 @@ public class EndpointController {
 
     @GetMapping("/recommend_cycling")
     List<SegmentRecommendation> recommendCycling(@RequestParam("watts") String watts, @RequestParam("address") String address) throws Exception {
+        System.out.println(String.format("request: watts [%s] address [%s]", watts, address));
         File f = new File(CONFIG_FILE_PATH);
         ConfigReader configReader = new ConfigReader(f);
 
