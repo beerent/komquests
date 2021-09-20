@@ -30,3 +30,4 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .DS_Store
+api/src/main/resources/application.properties
