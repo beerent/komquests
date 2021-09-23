@@ -4,6 +4,8 @@ public class Segment {
     private int id;
     private String name;
     private Double distance;
+    private Double avg_grade;
+    private Double elev_difference;
 
     public int getId() {
         return this.id;
@@ -27,5 +29,21 @@ public class Segment {
 
     public void setDistance(Double distance) {
         this.distance = distance;
+    }
+
+    public Double getAverageGrade() {
+        return this.avg_grade;
+    }
+
+    public void setAverageGrade(Double averageGrade) {
+        this.avg_grade = averageGrade;
+    }
+
+    public Double getElevationDifference() {
+        return this.elev_difference;
+    }
+
+    public void setElevationDifference(Double elev_difference) {
+        this.elev_difference = elev_difference;
     }
 }
