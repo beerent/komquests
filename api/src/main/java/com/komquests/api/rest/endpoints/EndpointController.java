@@ -27,8 +27,8 @@ import java.util.List;
 
 @RestController
 public class EndpointController {
-    //private static final String CONFIG_FILE_PATH = "/home/ubuntu/.komquests/config";
-    private static final String CONFIG_FILE_PATH = "/Users/beerent/.komquests/config";
+    private static final String CONFIG_FILE_PATH = "/home/ubuntu/.komquests/config";
+    //private static final String CONFIG_FILE_PATH = "/Users/beerent/.komquests/config";
 
     private static final Logger logger = LogManager.getLogger(EndpointController.class);
 
@@ -59,6 +59,44 @@ public class EndpointController {
 
         Coordinates coordinates = geocodeConnector.getCoordinates(address);
         List<SegmentSearchRequest> segmentSearchRequests = getSegmentSearchRequests(coordinates);
+
+        return getSegmentRecommendations(activity, stravaConnector, segmentSearchRequests);
+    }
+
+    private List<SegmentRecommendation> getSegmentRecommendations(StravaActivity activity, StravaConnector stravaConnector, List<SegmentSearchRequest> segmentSearchRequests) {
+        if (activity == StravaActivity.CYCLING)
+        {
+            return getCyclingSegmentRecommendations(stravaConnector, segmentSearchRequests);
+        }
+        
+        return getRunningSegmentRecommendations(stravaConnector, segmentSearchRequests);
+    }
+
+    private List<SegmentRecommendation> getCyclingSegmentRecommendations(StravaConnector stravaConnector, List<SegmentSearchRequest> segmentSearchRequests) {
+        List<SegmentRecommendation> recommendations = new ArrayList<>();
+        List<Segment> observedSegments = new ArrayList<>();
+        for (SegmentSearchRequest segmentSearchRequest : segmentSearchRequests)
+        {
+            List<Segment> localSegments = stravaConnector.getCyclingSegmentRecommendations(segmentSearchRequest);
+
+            for (Segment segment : localSegments) {
+                if (segmentAlreadyObserved(observedSegments, segment))
+                {
+                    continue;
+                }
+
+                observedSegments.add(segment);
+                double miles = metersToMiles(segment);
+                SegmentLeaderboard<RunningSegmentLeaderboardEntry> segmentLeaderboard = stravaConnector.getCyclingSegmentLeaderboard(segment.getId());
+                SegmentRecommendation segmentRecommendation = new SegmentRecommendation(segment, segmentLeaderboard, miles);
+                recommendations.add(segmentRecommendation);
+            }
+        }
+
+        return recommendations;
+    }
+
+    private List<SegmentRecommendation> getRunningSegmentRecommendations(StravaConnector stravaConnector, List<SegmentSearchRequest> segmentSearchRequests) {
         List<SegmentRecommendation> recommendations = new ArrayList<>();
         List<Segment> observedSegments = new ArrayList<>();
         for (SegmentSearchRequest segmentSearchRequest : segmentSearchRequests)
@@ -72,7 +110,7 @@ public class EndpointController {
                 }
 
                 observedSegments.add(segment);
-                double miles = segment.getDistance() / 1609.34;
+                double miles = metersToMiles(segment);
                 SegmentLeaderboard<RunningSegmentLeaderboardEntry> segmentLeaderboard = stravaConnector.getRunningSegmentLeaderboard(segment.getId());
                 SegmentRecommendation segmentRecommendation = new SegmentRecommendation(segment, segmentLeaderboard, miles);
                 recommendations.add(segmentRecommendation);
@@ -80,6 +118,10 @@ public class EndpointController {
         }
 
         return recommendations;
+    }
+
+    private double metersToMiles(Segment segment) {
+        return segment.getDistance() / 1609.34;
     }
 
     private List<SegmentSearchRequest> getSegmentSearchRequests(Coordinates coordinates) {
