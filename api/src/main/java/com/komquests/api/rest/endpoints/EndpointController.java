@@ -33,31 +33,51 @@ public class EndpointController {
     private static final Logger logger = LogManager.getLogger(EndpointController.class);
 
     @GetMapping("/recommend_cycling")
-    List<SegmentRecommendation> recommendCycling(@RequestParam("address") String address) {
-        logger.info(String.format("cycling request: address [%s]", address));
+    List<SegmentRecommendation> recommendCycling(
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "latitude", required = false) String latitude) {
+        logger.info(String.format("cycling request: address [%s] coordinates [%s, %s]", address, longitude, latitude));
 
-        return getRecommendations(StravaActivity.CYCLING, address);
+        Coordinates coordinates = null;
+        if (longitude != null && latitude != null) {
+            coordinates = new Coordinates(Double.valueOf(latitude), Double.valueOf(longitude));
+        } else if (address != null) {
+            coordinates = getCoordinatesFromAddress(address);
+        }
+
+        if (coordinates == null) {
+            return new ArrayList<>();
+        }
+
+        return getRecommendations(StravaActivity.CYCLING, coordinates);
     }
 
     @GetMapping("/recommend_running")
-    List<SegmentRecommendation> recommendRunning(@RequestParam("address") String address) {
-        logger.info(String.format("run request: address [%s]", address));
+    List<SegmentRecommendation> recommendRunning(
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "latitude", required = false) String latitude) {
+        logger.info(String.format("run request: address [%s] coordinates [%s, %s]", address, longitude, latitude));
 
-        return getRecommendations(StravaActivity.RUNNING, address);
+        Coordinates coordinates = null;
+        if (longitude != null && latitude != null) {
+            coordinates = new Coordinates(Double.valueOf(latitude), Double.valueOf(longitude));
+        } else if (address != null) {
+            coordinates = getCoordinatesFromAddress(address);
+        }
+
+        if (coordinates == null) {
+            return new ArrayList<>();
+        }
+
+        return getRecommendations(StravaActivity.RUNNING, coordinates);
     }
 
-    private List<SegmentRecommendation> getRecommendations(StravaActivity activity, String address) {
-        File f = new File(CONFIG_FILE_PATH);
-        ConfigReader configReader = new ConfigReader(f);
-
-        ApiToken googleApiToken = new ApiToken(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
-        RestService googleRestService = new RestService(googleApiToken);
-        GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
-
+    private List<SegmentRecommendation> getRecommendations(StravaActivity activity, Coordinates coordinates) {
         StravaApiTokenRetriever stravaApiTokenRetriever = createStravaApiTokenRetriever();
         StravaConnector stravaConnector = new StravaConnector(new RestService(), stravaApiTokenRetriever);
 
-        Coordinates coordinates = geocodeConnector.getCoordinates(address);
         List<SegmentSearchRequest> segmentSearchRequests = getSegmentSearchRequests(coordinates);
 
         return getSegmentRecommendations(activity, stravaConnector, segmentSearchRequests);
@@ -118,6 +138,17 @@ public class EndpointController {
         }
 
         return recommendations;
+    }
+
+    private Coordinates getCoordinatesFromAddress(String address) {
+        File f = new File(CONFIG_FILE_PATH);
+        ConfigReader configReader = new ConfigReader(f);
+        ApiToken googleApiToken = new ApiToken(configReader.getValue("geocode_token"), AuthenticationType.QUERY);
+        RestService googleRestService = new RestService(googleApiToken);
+        GeocodeConnector geocodeConnector = new GeocodeConnector(googleRestService);
+        Coordinates coordinates = geocodeConnector.getCoordinates(address);
+
+        return coordinates;
     }
 
     private double metersToMiles(Segment segment) {
